@@ -1,1 +1,311 @@
-﻿
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Employee Management</title>
+    <link href="/css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+
+        <!-- Control Panel -->
+        <div class="row mb-3">
+            <div class="col-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">Create</button>
+            </div>
+            <div class="col-auto">
+                <select class="form-select" id="pageSizeSelect" onchange="changePageSize(this.value)">
+                    <option value="1">1 per page</option>
+                    <option value="5">5 per page</option>
+                    <option value="10" selected>10 per page</option>
+                    <option value="20">20 per page</option>
+                    <option value="50">50 per page</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Employee List Table -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Salary <a href="#" onclick="sort('ASC')">↑</a><a href="#" onclick="sort('DESC')">↓</a></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeList">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Info -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                Total Items: <span id="totalItems">0</span>
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0" id="pagination">
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Create Employee Modal -->
+        <div class="modal fade" id="createModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Create New Employee</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger d-none" id="createErrors"></div>
+                        <form id="createForm">
+                            <div class="mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control" name="Name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Salary</label>
+                                <input type="number" step="0.01" class="form-control" name="Salary" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="createEmployee()">Create</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Salary Modal -->
+        <div class="modal fade" id="editModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Salary</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger d-none" id="editErrors"></div>
+                        <form id="editForm">
+                            <input type="hidden" name="id">
+                            <div class="mb-3">
+                                <label class="form-label">Employee Name</label>
+                                <input type="text" class="form-control" name="name" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Salary</label>
+                                <input type="number" step="0.01" class="form-control" name="salary" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="updateEmployee()">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/main.js"></script>
+    <script src="/js/bootstrap.js"></script>
+
+    <script>
+        let currentPage = 1;
+        let pageSize = 10;
+        let sortOrder = 'ASC';
+
+        // Bootstrap modal instances
+        let createModal;
+        let editModal;
+
+        $(document).ready(function () {
+            createModal = new bootstrap.Modal(document.getElementById('createModal'));
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            loadEmployees();
+        });
+
+        function loadEmployees() {
+            $.ajax({
+                url: `https://localhost:7297/api/Employee?page=${currentPage}&pageSize=${pageSize}&sortOrder=${sortOrder}`,
+                method: 'GET',
+                success: function (response) {
+                    displayEmployees(response.data);
+                    displayPagination(response);
+                    updateTotalItems(response.total);
+                },
+                error: function (xhr) {
+                    console.error('Error:', xhr);
+                    alert('Error loading employees');
+                }
+            });
+        }
+
+        function updateTotalItems(total) {
+            $('#totalItems').text(total);
+        }
+
+        function changePageSize(size) {
+            pageSize = parseInt(size);
+            currentPage = 1;
+            loadEmployees();
+        }
+
+        function displayEmployees(employees) {
+            const tbody = $('#employeeList');
+            tbody.empty();
+
+            if (!employees || employees.length === 0) {
+                tbody.append('<tr><td colspan="4" class="text-center">No employees found</td></tr>');
+                return;
+            }
+
+            employees.forEach(employee => {
+                tbody.append(`
+                        <tr>
+                            <td>${employee.id}</td>
+                            <td>${employee.name}</td>
+                            <td>${employee.salary.toFixed(2)}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="showEditForm(${employee.id}, '${employee.name}', ${employee.salary})">
+                                    Edit Salary
+                                </button>
+                            </td>
+                        </tr>
+                    `);
+            });
+        }
+
+        function displayPagination(response) {
+            const pagination = $('#pagination');
+            pagination.empty();
+
+            if (!response.totalPages || response.totalPages <= 1) return;
+
+            // Previous button
+            pagination.append(`
+                    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="event.preventDefault(); changePage(${currentPage - 1})">Previous</a>
+                    </li>
+                `);
+
+            // Page numbers
+            for (let i = 1; i <= response.totalPages; i++) {
+                pagination.append(`
+                        <li class="page-item ${currentPage === i ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="event.preventDefault(); changePage(${i})">${i}</a>
+                        </li>
+                    `);
+            }
+
+            // Next button
+            pagination.append(`
+                    <li class="page-item ${currentPage === response.totalPages ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="event.preventDefault(); changePage(${currentPage + 1})">Next</a>
+                    </li>
+                `);
+        }
+
+        function changePage(page) {
+            if (page < 1) return;
+            currentPage = page;
+            loadEmployees();
+        }
+
+        function sort(order) {
+            sortOrder = order;
+            currentPage = 1;
+            loadEmployees();
+        }
+
+        function createEmployee() {
+            const formData = new FormData();
+            formData.append('Name', $('#createForm [name="Name"]').val().trim());
+            formData.append('Salary', $('#createForm [name="Salary"]').val());
+
+            $.ajax({
+                url: 'https://localhost:7297/api/Employee',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.success) {
+                        createModal.hide();
+                        $('#createForm')[0].reset();
+                        loadEmployees();
+                    } else {
+                        showErrors('#createErrors', response.errors);
+                    }
+                },
+                error: function (xhr) {
+                    const errors = xhr.responseJSON && xhr.responseJSON.errors
+                        ? xhr.responseJSON.errors
+                        : ['An error occurred while creating the employee'];
+                    showErrors('#createErrors', errors);
+                }
+            });
+        }
+
+        function showEditForm(id, name, salary) {
+            const form = $('#editForm');
+            form.find('[name=id]').val(id);
+            form.find('[name=name]').val(name);
+            form.find('[name=salary]').val(salary.toFixed(2));
+            $('#editErrors').addClass('d-none');
+            editModal.show();
+        }
+
+        function updateEmployee() {
+            const form = $('#editForm');
+            const formData = new FormData();
+            formData.append('Name', $('#createForm [name="Id"]').val().trim());
+            formData.append('Salary', $('#createForm [name="Salary"]').val());
+
+            $.ajax({
+                url: `https://localhost:7297/api/Employee`,
+                method: 'PUT',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.success) {
+                        editModal.hide();
+                        loadEmployees();
+                    } else {
+                        showErrors('#editErrors', response.errors);
+                    }
+                },
+                error: function (xhr) {
+                    const errors = xhr.responseJSON && xhr.responseJSON.errors
+                        ? xhr.responseJSON.errors
+                        : ['An error occurred while updating the employee'];
+                    showErrors('#editErrors', errors);
+                }
+            });
+        }
+
+        function showErrors(selector, errors) {
+            const errorDiv = $(selector);
+            errorDiv.removeClass('d-none').empty();
+
+            if (Array.isArray(errors)) {
+                errors.forEach(error => {
+                    errorDiv.append(`<div>${error}</div>`);
+                });
+            } else if (typeof errors === 'object') {
+                Object.values(errors).flat().forEach(error => {
+                    errorDiv.append(`<div>${error}</div>`);
+                });
+            } else {
+                errorDiv.append(`<div>${errors}</div>`);
+            }
+        }
+    </script>
+</body>
+</html>
