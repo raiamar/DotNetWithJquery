@@ -6,7 +6,6 @@ BEGIN
         @Salary DECIMAL(18,2)
     AS
     BEGIN
-        SET NOCOUNT ON;
         
         UPDATE SW_TBL_EMPLOYEE 
         SET Salary = @Salary

@@ -10,6 +10,7 @@ public class UpdateEmployeeCommandHandler(IEmployeeRepository employeeRepository
         var validator = new UpdateEmployeeCommandValidator(_connection.GetConnectionString());
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         var response = new CommandResponse();
+        response.Message = "Employee salary updated";
 
         if (validationResult.Errors.Count > 0)
         {
@@ -18,7 +19,20 @@ public class UpdateEmployeeCommandHandler(IEmployeeRepository employeeRepository
             response.Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
             return response;
         }
-        // rest of code
+
+        try
+        {
+            bool result = await _employeeRepository.UpdateEmployeeSalaryAsync(request.Employee);
+            if (!result)
+            {
+                response.Success = false;
+                response.Message = "Something went wrong";
+            }
+        }
+        catch
+        {
+            throw;
+        }
         return response;
     }
 }

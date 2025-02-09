@@ -8,12 +8,12 @@ public class UpdateEmployeeCommandValidator : AbstractValidator<UpdateEmployeeCo
     {
         _connectionString = connectionString;
 
-        RuleFor(x => x.Id)
+        RuleFor(x => x.Employee.Id)
             .GreaterThan(0).WithMessage("Employee ID is required.")
             .MustAsync(async (id, cancellationToken) => await EmployeeExistsInDatabaseAsync(id, cancellationToken))
             .WithMessage("Invalid Employee ID. Employee does not exist.");
 
-        RuleFor(x => x.Salary)
+        RuleFor(x => x.Employee.Salary)
             .GreaterThan(0).WithMessage("Salary must be greater than zero.");
     }
 
@@ -23,7 +23,7 @@ public class UpdateEmployeeCommandValidator : AbstractValidator<UpdateEmployeeCo
         {
             await connection.OpenAsync(cancellationToken);
 
-            var query = "SELECT COUNT(1) FROM SW_TBL_EMPLOYEE WHERE Id = @Id";
+            var query = "SELECT COUNT(1) FROM SW_TBL_EMPLOYEE WHERE EmployeeId = @Id";
             using (var command = new SqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@Id", employeeId);

@@ -28,4 +28,24 @@ public class EmployeeRepository : IEmployeeRepository
             }
         }
     }
+
+
+
+    public async Task<bool> UpdateEmployeeSalaryAsync(UpdateEmployeeDto employee)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            using (var command = new SqlCommand("SP_UpdateEmployeeSalary", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+
+                command.Parameters.Add("@EmployeeId", SqlDbType.Int).Value = employee.Id;
+                command.Parameters.Add("@Salary", SqlDbType.Decimal).Value = employee.Salary;
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteNonQueryAsync();
+                return result > 0;
+            }
+        }
+    }
 }
