@@ -9,6 +9,7 @@ public class CreateEmployeeCommandHandler(IEmployeeRepository employeeRepository
         var validator = new CreateEmployeeCommandValidator(_dbConnection.GetConnectionString());
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         var response = new CommandResponse();
+        response.Message = "Employee has been created";
 
         if (validationResult.Errors.Count > 0)
         {
@@ -17,7 +18,18 @@ public class CreateEmployeeCommandHandler(IEmployeeRepository employeeRepository
             response.Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
             return response;
         }
-        // rest of code
+        try
+        {
+            int id = await _employeeRepository.CreateEmployeeAsync(request.Employee);
+            if (id <= 0)
+            {
+                response.Success = false;
+                response.Message = "Something went wrong";
+            }
+        }catch
+        {
+            throw;
+        }
         return response;
     }
 }

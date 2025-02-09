@@ -7,13 +7,13 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
     public CreateEmployeeCommandValidator(string dbConnection)
     {
         _connectionString = dbConnection;
-        RuleFor(x => x.Name)
+        RuleFor(x => x.Employee.Name)
             .NotEmpty().WithMessage("Name is required.")
             .Matches(@"^[a-zA-Z\s]+$").WithMessage("Name can only contain letters and spaces.")
             .MustAsync(async (name, cancellationToken) => !await NameExistsInDatabaseAsync(name, cancellationToken))
             .WithMessage("Name already exists.");
 
-        RuleFor(x => x.Salary)
+        RuleFor(x => x.Employee.Salary)
             .GreaterThan(0).WithMessage("Salary must be greater than zero.");
     }
 
@@ -25,7 +25,7 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
         {
             await connection.OpenAsync(cancellationToken);
 
-            var query = "SELECT COUNT(1) FROM Employees WHERE Name = @Name";
+            var query = "SELECT COUNT(1) FROM SW_TBL_EMPLOYEE WHERE EmployeeName = @Name";
             using (var command = new SqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@Name", name);

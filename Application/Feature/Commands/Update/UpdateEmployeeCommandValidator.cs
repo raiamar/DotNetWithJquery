@@ -23,7 +23,7 @@ public class UpdateEmployeeCommandValidator : AbstractValidator<UpdateEmployeeCo
         {
             await connection.OpenAsync(cancellationToken);
 
-            var query = "SELECT COUNT(1) FROM Employees WHERE Id = @Id";
+            var query = "SELECT COUNT(1) FROM SW_TBL_EMPLOYEE WHERE Id = @Id";
             using (var command = new SqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@Id", employeeId);

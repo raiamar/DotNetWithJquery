@@ -11,14 +11,17 @@ public class EmployeeController(IMediator mediator) : ControllerBase
     private readonly IMediator _mediator = mediator;
 
     [HttpPost]
-    public async Task<CommandResponse> CreateEmployee([FromForm] CreateEmployeeCommand command)
+    public async Task<CommandResponse> CreateEmployee([FromForm] CreateEmployeeDto employee)
     {
         CommandResponse response = new();
+
+        CreateEmployeeCommand command = new(employee);
         var result = await _mediator.Send(command);
 
         if(result.Success == false)
             Response.StatusCode = StatusCodes.Status400BadRequest;
 
+        response.Success = result.Success;
         response.Message = result.Message;
         response.Errors = result.Errors;
         return response;
