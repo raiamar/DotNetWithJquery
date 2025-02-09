@@ -10,7 +10,9 @@ public class DbInitializer
 
             string[] scriptFiles = {
                 "Infrastructure/Data/Database/01_CreateEmployeeTable.sql",
-                // other sql
+                "Infrastructure/Data/Database/02_CreateEmployeeProcedure.sql",
+                "Infrastructure/Data/Database/03_UpdateEmployeeProcedure.sql",
+                "Infrastructure/Data/Database/04_GetEmployeeProcedure.sql",
             };
 
             foreach (var scriptFile in scriptFiles)

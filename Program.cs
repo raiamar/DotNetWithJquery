@@ -43,7 +43,7 @@ app.Use(async (context, next) =>
     if (context.Request.Path == "/")
     {
         context.Response.ContentType = "text/html";
-        await context.Response.SendFileAsync(Path.Combine(Directory.GetCurrentDirectory(), "Views", "index.html"));
+        await context.Response.SendFileAsync(Path.Combine(Directory.GetCurrentDirectory(), "Views", "layout.html"));
         return;
     }
     await next();
