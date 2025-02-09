@@ -263,16 +263,16 @@
 
         function updateEmployee() {
             const form = $('#editForm');
-            const formData = new FormData();
-            formData.append('Name', $('#createForm [name="Id"]').val().trim());
-            formData.append('Salary', $('#createForm [name="Salary"]').val());
+            const formData = {
+                id: parseInt(form.find('[name=id]').val()),
+                salary: parseFloat(form.find('[name=salary]').val())
+            };
 
             $.ajax({
-                url: `https://localhost:7297/api/Employee`,
+                url: 'https://localhost:7297/api/Employee',
                 method: 'PUT',
-                data: formData,
-                processData: false,
-                contentType: false,
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
                 success: function (response) {
                     if (response.success) {
                         editModal.hide();

@@ -45,27 +45,6 @@ public class EmployeeController(IMediator mediator) : ControllerBase
     }
 
 
-    //[HttpPut("{id}")]
-    //public async Task<CommandResponse> UpdateEmployee(int id, decimal salary)
-    //{
-    //    UpdateEmployeeDto employee = new()
-    //    {
-    //        Id = id,
-    //        Salary = salary
-    //    };
-    //    CommandResponse response = new();
-    //    UpdateEmployeeCommand command = new(employee);
-    //    var result = await _mediator.Send(command);
-
-    //    if (result.Success == false)
-    //        Response.StatusCode = StatusCodes.Status400BadRequest;
-
-    //    response.Success = result.Success;
-    //    response.Message = result.Message;
-    //    response.Errors = result.Errors;
-    //    return response;
-    //}
-
     [HttpGet]
     public async Task<PaginatedResult<IEnumerable<EmployeeDto>>> GetEmployee([FromQuery] EmployeeFilter filter)
     {
